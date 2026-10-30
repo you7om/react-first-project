@@ -9,23 +9,65 @@
     <script src="https://unpkg.com/supersimpledev/react.js"></script>
     <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
 
+    <script src="https://unpkg.com/supersimpledev/chatbot.js"></script>
+
     <script src="https://unpkg.com/supersimpledev/babel.js"></script>
     <script type="text/babel">
       function ChatInput({ chatMessages, setChatMessages }) {
         const [inputText, setInputText] = React.useState("");
+        const [isLoading, setIsLoading] = React.useState(false);
+
         function saveInputText(event) {
           setInputText(event.target.value);
         }
 
-        function sendMessage() {
-          setChatMessages([
+        async function sendMessage() {
+          if (isLoading || inputText === "") {
+            return;
+          }
+
+          setIsLoading(true);
+
+          const newChatMessages = [
             ...chatMessages,
             {
-              message: "test",
+              message: inputText,
               sender: "user",
               id: crypto.randomUUID(),
             },
+          ];
+
+          setChatMessages([
+            ...newChatMessages,
+            {
+              message: "Loading...",
+              sender: "robot",
+              id: crypto.randomUUID(),
+            },
           ]);
+
+          setInputText("");
+
+          const response = await Chatbot.getResponseAsync(inputText);
+
+          setChatMessages([
+            ...newChatMessages,
+            {
+              message: response,
+              sender: "robot",
+              id: crypto.randomUUID(),
+            },
+          ]);
+
+          setIsLoading(false);
+        }
+
+        function handleKeyDown(event) {
+          if (event.key === "Enter") {
+            sendMessage();
+          } else if (event.key === "Escape") {
+            setInputText("");
+          }
         }
 
         return (
@@ -34,6 +76,8 @@
               placeholder="Send a message to Chatbot"
               size="30"
               onChange={saveInputText}
+              onKeyDown={handleKeyDown}
+              value={inputText}
             />
             <button onClick={sendMessage}>Send</button>
           </>
@@ -50,7 +94,7 @@
         );
       }
 
-      function ChatMessages() {
+      function ChatMessages({ chatMessages }) {
         return (
           <>
             {chatMessages.map((chatMessage) => {
@@ -90,17 +134,13 @@
           },
         ]);
 
-        //const [chatMessages, setChatMessages] = array;
-        //const chatMessages = array[0];
-        //const setChatMessages = array[1];
-
         return (
           <>
             <ChatInput
               chatMessages={chatMessages}
               setChatMessages={setChatMessages}
             />
-            <ChatMessages />
+            <ChatMessages chatMessages={chatMessages} />
           </>
         );
       }
