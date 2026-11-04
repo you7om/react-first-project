@@ -1,7 +1,89 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chatbot</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      .app-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+      }
+      .chat-messages-container {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-bottom: 16px;
+      }
+      .chat-message-user,
+      .chat-message-robot {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .chat-message-user {
+        justify-content: flex-end;
+      }
+      .chat-message-robot {
+        justify-content: flex-start;
+      }
+      .chat-message-profile {
+        width: 45px;
+        height: 45px;
+        flex-shrink: 0;
+        border-radius: 50%;
+      }
+      .chat-message-text {
+        max-width: 70%;
+        padding: 12px 16px;
+        border-radius: 14px;
+        background-color: rgb(238, 238, 238);
+        font-size: 15px;
+        line-height: 1.4;
+        overflow-wrap: anywhere;
+      }
+      .chat-message-user .chat-message-text {
+        background-color: rgb(25, 135, 84);
+        color: white;
+      }
+      .chat-input-container {
+        display: flex;
+        flex-shrink: 0;
+      }
+      .chat-input {
+        min-width: 0;
+        flex-grow: 1;
+        padding: 12px 15px;
+        border: 1px solid rgb(180, 180, 180);
+        border-radius: 10px;
+        font-size: 15px;
+      }
+      .send-button {
+        margin-left: 10px;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 10px;
+        background-color: rgb(25, 135, 84);
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
+      }
+      .send-button:hover {
+        background-color: rgb(20, 108, 67);
+      }
+    </style>
   </head>
   <body>
     <div class="js-container"></div>
@@ -22,7 +104,7 @@
         }
 
         async function sendMessage() {
-          if (isLoading || inputText === "") {
+          if (isLoading || inputText.trim() === "") {
             return;
           }
 
@@ -71,32 +153,51 @@
         }
 
         return (
-          <>
+          <div className="chat-input-container">
             <input
               placeholder="Send a message to Chatbot"
-              size="30"
               onChange={saveInputText}
               onKeyDown={handleKeyDown}
               value={inputText}
+              className="chat-input"
             />
-            <button onClick={sendMessage}>Send</button>
-          </>
+            <button onClick={sendMessage} className="send-button">
+              Send
+            </button>
+          </div>
         );
       }
 
       function ChatMessage({ message, sender }) {
         return (
-          <div>
-            {sender === "robot" && <img src="robot.png" width="50" />}
-            {message}
-            {sender === "user" && <img src="user.png" width="50" />}
+          <div
+            className={
+              sender === "user" ? "chat-message-user" : "chat-message-robot"
+            }
+          >
+            {sender === "robot" && (
+              <img src="robot.png" alt="Robot" className="chat-message-profile" />
+            )}
+            <div className="chat-message-text">{message}</div>
+            {sender === "user" && (
+              <img src="user.png" alt="User" className="chat-message-profile" />
+            )}
           </div>
         );
       }
 
       function ChatMessages({ chatMessages }) {
+        const chatMessagesRef = React.useRef(null);
+
+        React.useEffect(() => {
+          const containerElem = chatMessagesRef.current;
+          if (containerElem) {
+            containerElem.scrollTop = containerElem.scrollHeight;
+          }
+        }, [chatMessages]);
+
         return (
-          <>
+          <div className="chat-messages-container" ref={chatMessagesRef}>
             {chatMessages.map((chatMessage) => {
               return (
                 <ChatMessage
@@ -106,7 +207,7 @@
                 />
               );
             })}
-          </>
+          </div>
         );
       }
 
@@ -135,13 +236,13 @@
         ]);
 
         return (
-          <>
+          <div className="app-container">
+            <ChatMessages chatMessages={chatMessages} />
             <ChatInput
               chatMessages={chatMessages}
               setChatMessages={setChatMessages}
             />
-            <ChatMessages chatMessages={chatMessages} />
-          </>
+          </div>
         );
       }
 
